@@ -18,12 +18,12 @@ corr <- function(directory, threshold = 0) {
   dataset <- dataset[complete.cases(dataset), ] # filter to only contain complete cases
   complete_cases <- ddply(dataset,.(ID), summarise, count = length(ID)) # summarize on number of complete cases
   
-  complete_cases <- complete_cases[complete_cases["ID"] > threshold,]
+  complete_cases <- complete_cases[complete_cases["ID"] >= threshold,]
   
   result <- numeric()
   for (id in complete_cases$ID) {
     data <- dataset[dataset["ID"] == id,]
-    temp <- cor(x = data$sulfate, y = data$nitrate)
+    temp <- cor(x = data$nitrate, y = data$sulfate)
     result <- append(result, temp)
   }
   result
