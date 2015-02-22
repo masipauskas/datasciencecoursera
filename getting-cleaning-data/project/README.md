@@ -1,6 +1,5 @@
 ---
 title: "Coursera - UCI HAR Dataset analysis"
-output: html_document
 ---
 
 The script runs analysis on UCI HAR Dataset, by default it will expect the data being stored in "UCI HAR Dataset" directory, which should exist in your working directory.
