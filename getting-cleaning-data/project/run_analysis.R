@@ -1,3 +1,5 @@
+if (!exists("doNotWriteToFile")) doNotWriteToFile <- FALSE
+
 # Loads the requested dataset (train / test) based on dataSetName, and dataRoot.
 # dataSetName - name of the dataSet to load (train or test)
 # featureColumnLabels - labels to apply to each of the elements in feature Vecotor
@@ -57,7 +59,7 @@ loadDataSet <- function(dataSetName, featureColumnLabels, dataRoot) {
 # Args: 
 #   dataRoot - location of dataSet to be analysed, default - current working directory
 #   resultFileName - fileName of resulting data set to be writtend, default - analysis.txt
-runAnalysis <- function(dataRoot = "data/UCI HAR Dataset/", resultFileName = "analysis.txt") {
+runAnalysis <- function(dataRoot = "UCI HAR Dataset/", resultFileName = "analysis.txt") {
   # get a vector of each feature column labels
   featureVectorLabelDataSet <- read.table(file = paste(dataRoot, "features.txt", sep=""), stringsAsFactors = FALSE)
   featureColumnLabels <- featureVectorLabelDataSet[, 2]
@@ -81,7 +83,7 @@ runAnalysis <- function(dataRoot = "data/UCI HAR Dataset/", resultFileName = "an
                        "tBodyGyro-mean()-X", "tBodyGyro-mean()-Y", "tBodyGyro-mean()-Z", "tBodyGyro-std()-X", "tBodyGyro-std()-Y", "tBodyGyro-std()-Z", 
                        "tBodyGyroJerk-mean()-X", "tBodyGyroJerk-mean()-Y", "tBodyGyroJerk-mean()-Z", "tBodyGyroJerk-std()-X", "tBodyGyroJerk-std()-Y", "tBodyGyroJerk-std()-Z",
                        "tBodyAccMag-mean()", "tBodyAccMag-std()", "tGravityAccMag-mean()", "tGravityAccMag-std()", 
-                       "tBodyAccJerkMag-mean()", "tBodyGyroMag-mean()", "tBodyGyroMag-std()", "tBodyGyroJerkMag-mean()", "tBodyGyroJerkMag-std()", 
+                       "tBodyAccJerkMag-mean()", "tBodyAccJerkMag-std()", "tBodyGyroMag-mean()", "tBodyGyroMag-std()", "tBodyGyroJerkMag-mean()", "tBodyGyroJerkMag-std()", 
                        "fBodyAcc-mean()-X", "fBodyAcc-mean()-Y", "fBodyAcc-mean()-Z", 
                        "fBodyAcc-std()-X", "fBodyAcc-std()-Y", "fBodyAcc-std()-Z", 
                        "fBodyAccJerk-mean()-X", "fBodyAccJerk-mean()-Y", "fBodyAccJerk-mean()-Z", 
@@ -100,7 +102,7 @@ runAnalysis <- function(dataRoot = "data/UCI HAR Dataset/", resultFileName = "an
                         "tBodyGyro.mean.X", "tBodyGyro.mean.Y", "tBodyGyro.mean.Z", "tBodyGyro.std.X", "tBodyGyro.std.Y", "tBodyGyro.std.Z", 
                         "tBodyGyroJerk.mean.X", "tBodyGyroJerk.mean.Y", "tBodyGyroJerk.mean.Z", "tBodyGyroJerk.std.X", "tBodyGyroJerk.std.Y", "tBodyGyroJerk.std.Z",
                         "tBodyAccMag.mean", "tBodyAccMag.std", "tGravityAccMag.mean", "tGravityAccMag.std", 
-                        "tBodyAccJerkMag.mean", "tBodyGyroMag.mean", "tBodyGyroMag.std", "tBodyGyroJerkMag.mean", "tBodyGyroJerkMag.std", 
+                        "tBodyAccJerkMag.mean", "tBodyAccJerkMag.std", "tBodyGyroMag.mean", "tBodyGyroMag.std", "tBodyGyroJerkMag.mean", "tBodyGyroJerkMag.std", 
                         "fBodyAcc.mean.X", "fBodyAcc.mean.Y", "fBodyAcc.mean.Z", 
                         "fBodyAcc.std.X", "fBodyAcc.std.Y", "fBodyAcc.std.Z", 
                         "fBodyAccJerk.mean.X", "fBodyAccJerk.mean.Y", "fBodyAccJerk.mean.Z", 
@@ -115,7 +117,7 @@ runAnalysis <- function(dataRoot = "data/UCI HAR Dataset/", resultFileName = "an
   result <- ddply(result, .(Subject, Activity.Name), summarise, 
                   Body.Acceleration.X.Mean = mean(tBodyAcc.mean.X),
                   Body.Acceleration.Y.Mean = mean(tBodyAcc.mean.Y),
-                  Body.Acceleration.Y.Mean = mean(tBodyAcc.mean.Z),
+                  Body.Acceleration.Z.Mean = mean(tBodyAcc.mean.Z),
                   Body.Acceleration.X.STD = mean(tBodyAcc.std.X),
                   Body.Acceleration.Y.STD = mean(tBodyAcc.std.Y),
                   Body.Acceleration.Z.STD = mean(tBodyAcc.std.Z),
@@ -148,6 +150,7 @@ runAnalysis <- function(dataRoot = "data/UCI HAR Dataset/", resultFileName = "an
                   Gravity.Acceleration.Mag.Mean = mean(tGravityAccMag.mean),
                   Gravity.Acceleration.Mag.STD = mean(tGravityAccMag.std),
                   Body.Acceleration.Jerk.Mag.Mean = mean(tBodyAccJerkMag.mean),
+                  Body.Acceleration.Jerk.Mag.STD = mean(tBodyAccJerkMag.std),
                   Body.Gyroscope.Mag.Mean = mean(tBodyGyroMag.mean),
                   Body.Gyroscope.Mag.STD = mean(tBodyGyroMag.std),
                   Body.Gyroscope.Jerk.Mag.Mean = mean(tBodyGyroJerkMag.mean),
@@ -180,8 +183,9 @@ runAnalysis <- function(dataRoot = "data/UCI HAR Dataset/", resultFileName = "an
                   Fourier.Body.Gyroscope.Jerk.Mag.STD = mean(fBodyBodyGyroJerkMag.std))
   
   # write dataSet to text file
-  write.table(result, file=resultFileName, row.names = FALSE)
-  result
+  if(!doNotWriteToFile) {
+    write.table(result, file=resultFileName, row.names = FALSE)
+  }
 }
 
-#runAnalysis()
+analysis <- runAnalysis()
