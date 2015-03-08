@@ -1,0 +1,72 @@
+---
+title: "Homework - Week 1"
+author: "Martynas Asipauskas"
+date: "Sunday, March 08, 2015"
+output: html_document
+---
+
+This is a Homework solution / working document for Coursera - Statisical Inference course by John Hopkins University. [See assignment here](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#1)
+
+# Problem set solutions
+> Problem 1
+> ([Source](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#4))
+
+Overall probablity `p(A + B)` calculation is `p(A + B) = p(A) + p(B) - p(A intersect B)`
+In this exercise unknown is: `p(A intersect B)`, by re-ordering equation above we get: `p(A intersect B) = p(A) + p(B) - p(A+B)`
+Therefore the solution is: 0.04 or 4%.
+```{r, echo=TRUE}
+oneOfParents  <- 0.15
+father        <- 0.1
+mother        <- 0.09
+
+(father + mother) - oneOfParents
+```
+
+
+> Problem 2
+> ([Source](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#4))
+
+As the overall shape is a `1 x 1` square, median percentile will be middle of it: `0.50`
+
+
+> Problem 3
+> ([Source](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#5))
+
+The probability of tails is: `1 / (1 + d)`, whils the probablity of heads is: `d / (d + 1)`.
+Therefore your total winnings will be: `Y * (1 / (1 + d))`, however at to calculate overall ammount won/lost, you have to deduct an ammount of your losses: `X * (d / (d + 1))`. Therefore total calculation will be: `Y * (1 / (1 + d)) - X * (d / (d + 1))`.
+
+
+> Problem 4
+> ([Source](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#6))
+
+Variance is equal to: `Var(X)=E[X2]=(−4)^2∗.2+(1)^2∗.8`
+```{r, echo=TRUE}
+(−4)^2∗.2+(1)^2∗.8
+```
+
+
+> Problem 5
+> ([Source](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#7))
+
+Solution: `Var(Xˉ−Yˉ)=Var(Xˉ)+Var(Yˉ)=σ2/n+σ2/n`
+
+> Problem 6
+> ([Source](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#8))
+
+Solution: `Var(X/σ)=Var(X)/σ2=1`
+
+> Problem 7
+> ([Source](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#9))
+
+Solution: `Yes`
+
+> Problem 8
+> ([Source](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#10))
+
+Variance formula is: `E[X2]−E[X]2`. Therefore solution is:
+```{r, echo=TRUE}
+p <- c(.1, .2, .3, .4)
+x <- 2 : 5
+
+sum(x ^ 2 * p) - sum(x * p) ^ 2
+```
