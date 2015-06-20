@@ -56,13 +56,14 @@ top_10_property_damage <- top_10(aggregated, aggregated$PROPERTY_DAMAGE_USD, c("
 As we can see from the plots bellow, most harmful event type in the records is `TORNADO`, though it might not sound like too surprising at the same time, it is quite amazing that it is so much more harmful than any other event.
 
 ```{r}
+options(scipen = 999)
 par(mfrow = c(1, 2), oma = c(0, 0, 2, 0))
 par(mar = c(10, 4, 3, 4))
 barplot(top_10_injuries$INJURIES, names.arg = top_10_injuries$EVTYPE, main = "Injuries", 
         cex.axis = 1, cex.names = 0.5, las = 2)
 barplot(top_10_fatalities$FATALITIES, names.arg = top_10_fatalities$EVTYPE, main = "Fatalities", 
         cex.axis = 1, cex.names = 0.5, las = 2)
-title("Top 10  extreme weather events recorded by affected population injuries and fatalities", 
+title("Top 10  extreme weather events recorded \nby affected population injuries and fatalities", 
     outer = TRUE)
 ```
 
@@ -71,13 +72,14 @@ title("Top 10  extreme weather events recorded by affected population injuries a
 What is quite interesting, that in respect to economic damaged caused, there isn''t such a clear winner. As majority of the crop damage is caused by `EXCESSIVEE WETNESS` whilst, majority of the property damage is caused by `TORNADOES, TSTM WIND, HAIL`.
 
 ```{r}
+options(scipen = 999)
 par(mfrow = c(1, 2), oma = c(0, 0, 2, 0))
-par(mar = c(10, 4, 3, 4))
+par(mar = c(10, 6, 3, 4))
 barplot(top_10_crop_damage$CROP_DAMAGE_USD, names.arg = top_10_crop_damage$EVTYPE, main = "Crop Damage", 
         cex.axis = 1, cex.names = 0.5, las = 2)
 barplot(top_10_property_damage$PROPERTY_DAMAGE_USD, names.arg = top_10_property_damage$EVTYPE, main = "Property Damage", 
         cex.axis = 1, cex.names = 0.5, las = 2)
-title("Top 10 extreme weather events recorded by the ammounts in USD of damage caused", 
+title("Top 10 extreme weather events recorded \nby the ammounts in USD of damage caused", 
     outer = TRUE)
 ```
 
