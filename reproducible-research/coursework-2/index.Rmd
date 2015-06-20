@@ -1,0 +1,84 @@
+---
+title: "Weather events in U.S. which are most harmful to general population and have greatest economic circumnstances"
+author: "Martynas Asipauskas"
+date: "20 June 2015"
+output: html_document
+---
+## Synopsis
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+
+This report involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+The report tries to investigate the following questions:
+- Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+- Across the United States, which types of events have the greatest economic consequences?
+
+Report concludes whilst major impact to populaton health comes from `TORNADOES` both in number of fatalities and injuries caused. However in terms of economic damage being caused majority of the crop damage is caused by `EXCESSIVE WETNESS`, whilst property damage is primarely caused by `TORNADOES, TSM WIND, HAIL`.
+
+## Data processing
+
+To be able to analyze the data, we need to clean up the DMG columns (CROPDMG and PROPDMG) as they don't showcase the total ammount of damage in US Dollars, but only a value multiplied by corresponding EXP or Exponent column (CROPDMGEXP and PROPDMGEXP).
+
+```{r, cache=TRUE}
+require(car)
+require(plyr)
+
+recalculate <- function(value, exponent) {
+    e <- as.numeric(recode(tolower(as.character(exponent)), 
+    "'0'=1;'1'=10;'2'=10^2;'3'=10^3;'4'=10^4;'5'=10^5;'6'=10^6;'7'=10^7;'8'=10^8;'b'=10^9;'h'=10^2;'k'=10^3;'m'=10^6;'-'=0;'?'=0;'+'=0"))
+    return(value * e)
+}
+
+storm_data <- read.csv("repdata-data-StormData.csv.bz2")
+storm_data$CROP_DAMAGE_USD <- recalculate(storm_data$CROPDMG, storm_data$CROPDMGEXP)
+storm_data$PROPERTY_DAMAGE_USD <- recalculate(storm_data$PROPDMG, storm_data$PROPDMGEXP)
+
+aggregated <- ddply(storm_data, ~ EVTYPE, summarize, 
+                     FATALITIES = sum(FATALITIES),
+                     INJURIES = sum(INJURIES),
+                     CROP_DAMAGE_USD = sum(CROP_DAMAGE_USD),
+                     PROPERTY_DAMAGE_USD = sum(PROPERTY_DAMAGE_USD)
+                     )
+
+top_10 <- function(dataset, column, columns_to_return, limit = 10) {
+    return(dataset[order(column, decreasing = T), columns_to_return][1:limit, ])
+}
+
+top_10_fatalities <- top_10(aggregated, aggregated$FATALITIES, c("EVTYPE", "FATALITIES"))
+top_10_injuries <- top_10(aggregated, aggregated$INJURIES, c("EVTYPE", "INJURIES"))
+top_10_crop_damage <- top_10(aggregated, aggregated$CROP_DAMAGE_USD, c("EVTYPE", "CROP_DAMAGE_USD"))
+top_10_property_damage <- top_10(aggregated, aggregated$PROPERTY_DAMAGE_USD, c("EVTYPE", "PROPERTY_DAMAGE_USD"))
+```
+
+## Results
+### Question 1: What types of the events are most harmful in with respect to public health?
+
+As we can see from the plots bellow, most harmful event type in the records is `TORNADO`, though it might not sound like too surprising at the same time, it is quite amazing that it is so much more harmful than any other event.
+
+```{r}
+par(mfrow = c(1, 2), oma = c(0, 0, 2, 0))
+par(mar = c(10, 4, 3, 4))
+barplot(top_10_injuries$INJURIES, names.arg = top_10_injuries$EVTYPE, main = "Injuries", 
+        cex.axis = 1, cex.names = 0.5, las = 2)
+barplot(top_10_fatalities$FATALITIES, names.arg = top_10_fatalities$EVTYPE, main = "Fatalities", 
+        cex.axis = 1, cex.names = 0.5, las = 2)
+title("Top 10  extreme weather events recorded by affected population injuries and fatalities", 
+    outer = TRUE)
+```
+
+### Question 2: What types of the events are most harmful in with respect to damages caused?
+
+What is quite interesting, that in respect to economic damaged caused, there isn''t such a clear winner. As majority of the crop damage is caused by `EXCESSIVEE WETNESS` whilst, majority of the property damage is caused by `TORNADOES, TSTM WIND, HAIL`.
+
+```{r}
+par(mfrow = c(1, 2), oma = c(0, 0, 2, 0))
+par(mar = c(10, 4, 3, 4))
+barplot(top_10_crop_damage$CROP_DAMAGE_USD, names.arg = top_10_crop_damage$EVTYPE, main = "Crop Damage", 
+        cex.axis = 1, cex.names = 0.5, las = 2)
+barplot(top_10_property_damage$PROPERTY_DAMAGE_USD, names.arg = top_10_property_damage$EVTYPE, main = "Property Damage", 
+        cex.axis = 1, cex.names = 0.5, las = 2)
+title("Top 10 extreme weather events recorded by the ammounts in USD of damage caused", 
+    outer = TRUE)
+```
+
+
