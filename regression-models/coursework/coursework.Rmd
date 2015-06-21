@@ -1,0 +1,157 @@
+---
+title: "Regression Models - Peer Assessment"
+author: "Martynas Asipauskas"
+date: "21 June 2015"
+output: pdf_document
+---
+```{r, echo=FALSE}
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+## Executive Summary
+Motor Trend, a magazine about the automobile industry are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). This report written as coursework for Regression Models class tries to answer the following questions:
+
+- Is an automatic or manual transmission better for MPG
+- Quantify the MPG difference between automatic and manual transmissions
+
+This reports using multivariate linear regression, proves that there is significant difference between `mpg` and transmission type - the cars with manual transmission tend to have a higher mpg (by approx 7.2). Which has to be adjusted by other strong cofounding variables - weight and quarter mile time. The final model presented in results does containt the adjustments to the cofounding variables and can explain 83% of variance between the mpg and transmission type, weight and quarter mile time.
+
+## Data Processing
+Lets load the `mtcars` dataset. And rename automatic/manual transmission type to more readable Automatic / Manual.
+```{r}
+library(ggplot2)
+data(mtcars)
+cars <- mtcars
+cars$am <- as.factor(cars$am)
+levels(cars$am) <- c("Automatic", "Manual")
+```
+
+## Exploratory Data Analysis
+We will be running a linear regression modeling, therefore before we start building the models, we will make sure, that certain assumptions nescessary for it are met:
+
+- The distribution of `mpg` is close to normal and there arent any strong outliers.
+
+As per "Appendix 1" the data is close to normal distribusion and without outliers.
+
+The relationship we are interested from is between the `mpg` and `am` (See Appendix 2). Let's test to see if there is a statistically significant relationship between `mpg` and transmission type.
+```{r}
+aggregate(mpg ~ am, data = cars, mean)
+
+automatic <- cars[cars$am == "Automatic", ]
+manual <- cars[cars$am == "Manual", ]
+t.test(automatic$mpg, manual$mpg)
+```
+
+As we can see that average mpg for manual transmission type is `r round(24.39231 - 17.14737, 1)` mgp greater than for automatic transmission. Moreover, as per our t.test results the p-value is 0.001 and confidence interval does not include 0. Therfore we reject the null hypothesis (that there isn't any statistically significant relationship between mpg and transmission type). 
+
+We will explore this relationship more in depth in the modeling section. As the relationship only holds if all other variables (like weight, engine size and etc) are pretty much the same for all cars with Manual and Automatic transmission. As this data set contains 11 variables to better understand relationship between them, lets explore the correlation.
+
+```{r}
+data("mtcars")
+cars <- mtcars
+sort(cor(cars)[1,],decreasing = TRUE)
+```
+
+We can see that `drat`, `vs`, `am`, `gear` and `qsec` are all have positive correlation to `mgp` and `carb`, `hp`, `disp`, `cyl`, `wt` are negatively corellated. We will use this understanding to build a better multivariate regression model later on.
+
+## Modeling
+
+### Simple Linear Regression
+Lets try to fit a simple linear regression model between `mpg` and `am`  first.
+```{r}
+simple_fit <- lm(mpg ~ am, data = mtcars)
+```
+
+As we can see, we confirming that on average cars with manual transmission have a higher MGP by 7.2. Furthermore we see that $r^2=0.3598$ what means, that our model only explains 35.98% of the variance between different transmission types and miles per galon (See Appendix 2).
+
+### Multivariate regression
+We will now use stepwise algorithm to try to discover the best fit regression model.
+```{r, cache=TRUE}
+steps <- 10000
+fit <- lm(data = cars, mpg ~ .)
+model <- step(fit, steps = steps, trace = 0) #disable tracing for output
+```
+
+The proposed model after running a stepwise algorithm is `lm(mpg ~ wt + qsec + am, data = cars)` (See Appendix 3), for which adjusted $r^2=0.83$ which means that this model explains 83% of variance associated between transmission type and miles per galon. This means, that this is high quality and robust model which could be used for predictions.
+
+### Comparison of new multivariate model vs simple regression model
+We will now compare the quality of our initial simple regression model between mpg and am and the final regression model capturing wt, qsec and am - which captures 83% variance.
+```{r}
+multivariate_fit <- lm(mpg ~ wt + qsec + am, data = cars)
+anova(simple_fit, multivariate_fit)
+```
+
+As the multivariate model is capturing much wider variance than our original model (83% against 36%) with a p-value lower than 1% we will reject our null hypothesis (that our simple regression model is as good as multivariate) and will say that multivariate model is significantly different from simple linear regression model.
+
+Furthermore, we've checked for residuals and examined the final model for signs of non-normality and evidence of heteroskedasticity (See Appendix 4). The diagnostics show normality and there was no evidence observed of heteroskedasticity.
+
+## Results
+The final model explains 83% of the variance in mpg (miles per galon). Though we can say, that transmission type does impact the mpg (the manual transmission will result in overall higher mpg), there are two very strong co-founders which we've discovered in our analysis: weight (wt) - the lighter the car, the higher mpg - and $1/4$ mile time (qsec) - the faster quarter mile is, the higher mpg.
+
+## Appendix
+### Appendix 1: Analysis of `mtcars` dataset
+Exploring the distribusion of `MPG` values and exploring the relationship between `MPG` and `Transmission Type`.
+```{r}
+histogram <- ggplot(cars, aes(x = mpg)) + geom_histogram() + ggtitle("MPG Histogram")
+density <- ggplot(cars, aes(x = mpg)) + geom_density() + ggtitle("MPG Density curve")
+multiplot(histogram, density)
+```
+
+### Appendix 2: Summary for simple linear regression model
+```{r}
+summary(simple_fit)
+```
+
+### Appendix 3: Summary for multivariate model.
+```{r}
+summary(model)
+```
+
+### Appendix 4: Diagnostics for final multivariate model.
+```{r}
+par(mfrow = c(2,2))
+plot(multivariate_fit)
+```
