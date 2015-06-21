@@ -1,0 +1,101 @@
+---
+title: "Coursera Statistical Inference Project. Part 1."
+author: "Martynas Asipauskas"
+date: "21 June 2015"
+output: pdf_document
+---
+## Overview
+
+This project will investigate the exponential distribution in R and compare it with the Central Limit Theorem. The exponential distribution can be simulated in R with rexp(n, $\lambda$) where lambda is the rate parameter. The mean of exponential distribution is $1/\lambda$ and the standard deviation is also $1/\lambda$ It will investigate the distribution of averages of 40 exponentials. It will be observed after doing a thousand simulations.
+
+## Simulations
+First we run a thausand simulations and plot the mean distribution between the simulated values.
+
+```{r, echo=FALSE}
+library(ggplot2)
+set.seed(97372)
+
+# lets setup all the parameters for simulations
+lambda <- .2
+number_of_exponentials <- 40
+number_of_simulations <- 1000
+
+exponentials <- matrix(data = rexp(number_of_exponentials * number_of_simulations, lambda), nrow = number_of_simulations)
+distribution_means <- data.frame(means = apply(exponentials, 1, mean))
+
+ggplot(distribution_means, aes(x = means)) + geom_histogram() + ggtitle("Distribution of sample means\n where lambda is 0.2") + xlab("Mean") + ylab("Count")
+```
+
+## Sample Mean vs Theoretical Mean
+The expected mean $\mu$ of exponential distribution with rate of $\lambda$ is: $\mu = \frac{1}{\lambda}$
+
+```{r, echo=FALSE}
+expected_mu <- 1/lambda
+expected_mu
+```
+So expected $\mu$ is `r expected_mu`
+
+```{r, echo=FALSE}
+observed_mu <- mean(distribution_means$means)
+observed_mu
+```
+So observed $\mu$ is `r observed_mu`
+
+As it can be seen both observed and expected means are very close.
+
+## Sample Variane vs Theoretial Variance
+The expected standard deviation $\sigma$ of a exponential distribution with rate $\lambda$ is: $\sigma = \frac{\frac{1}{\lambda}}{\sqrt{n}}$
+
+```{r, echo=FALSE}
+expected_sd <- 1/lambda/sqrt(number_of_exponentials)
+expected_sd
+```
+
+The expected variance $Var$ of standard deviation $\sigma$ is: $Var = \sigma^2$
+```{r, echo=FALSE}
+expected_var <- expected_sd ^ 2
+expected_var
+```
+
+The observed standard deviation is:
+```{r, echo=FALSE}
+observed_sd <- sd(distribution_means$means)
+observed_sd
+```
+
+Observed variance is:
+```{r, echo=FALSE}
+observed_var <- var(distribution_means$means)
+observed_var
+```
+
+Once again, we can observe, that both expected and actual variance and standard deviation are very close. And therefore simulated variance and sd seems to represent the original population variance and sd well.
+
+## Distribution
+We can observe, that our mean distribution, closely follows the gausian distribution. To prove that this in fact is the case, we are going to do the following:
+    - Plot the approximate normal distribution and see if sample data aligns with it.
+    - Compare confidence intervals, mean and variance with normal distribution.
+
+### Plot the approximate normal distribution and see if sample data aligns with it
+```{r, echo=FALSE}
+plot <- ggplot(distribution_means, aes(x = means)) + geom_density(color = "red")
+plot <- plot + ggtitle("Comparison of observed and expected distributions") 
+plot <- plot + xlab("Mean") + ylab("Density")
+plot <- plot + geom_histogram(aes(y = ..density..))
+plot <- plot + geom_density(color = "red", size = 1)
+plot <- plot + geom_vline(xintercept = expected_mu, color = "red", class("Expected"))
+plot <- plot + geom_vline(xintercept = observed_mu, color = "blue", class("Observed"))
+plot
+```
+
+As we can see from the histogram above, is that it follows normal distribution quite well. Furthermore, the expected mean (in red) and observed mean (in blue) are very close as well.
+
+### Compare confidence intervals, mean and variance with normal distribution
+```{r, echo=FALSE}
+quantile <- 1.96
+expected_cf <- expected_mu + c(-1,1) * quantile * sqrt(expected_var)/sqrt(number_of_exponentials);
+observed_cf <- round(observed_mu + c(-1,1) * quantile * observed_sd/sqrt(number_of_exponentials),3)
+```
+
+Expected confidence interval (95%) is: `r expected_cf` and actually observed one is: `r observed_cf`.
+As we can see, they are very close. And therefore, we could once again say, that it still does follow normal distribution quite well.

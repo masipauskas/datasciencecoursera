@@ -1,0 +1,75 @@
+---
+title: "Statistical Inference Course Project - Part 2"
+author: "Martynas Asipauskas"
+date: "21 June 2015"
+output: pdf_document
+---
+## Overview
+As a second part in statistical inference course project. In this report we will look into exploring `ToothGrowth` dataset and performing basic inferential analysis on it.
+Specifically we wil be trying to look into the length of teeth in each of guinea pigs in response to three different doses of Vitamin C (0.5 mg, 1 mg, 2 mg) and two delivery methods: orange juicce and ascorbic acid.
+
+## Exploring the data set
+Lets load the data set first and have a quick look at the contents of the dataset
+```{r}
+library(ggplot2)
+library(datasets)
+data(ToothGrowth)
+
+data <- ToothGrowth
+data$dose <- as.factor(data$dose)
+
+summary(data)
+ggplot(data, aes(x = dose, y = len)) + geom_boxplot(aes(fill = dose)) + facet_grid(.~ supp)
+```
+
+## Comparing tooth growth by `supp` and `dose`
+We will compare the tooth growth by testing the following hypothesis:
+
+- If different type of suplement has any impact to the teeth length
+- If having different doses of Vitamin C does have any impact to resulting teeth length.
+
+In both cases we are going to be trying to reject the null hypothesis, that type of supplement and dose of Vitamin C has no impact on resulting teeth length in guinea pigs.    
+
+### Different type of suplement impact to the teeth length
+```{r}
+t.test(len ~ supp, data = data)
+```
+As p-value of the test is 0.06 and resulting confidence interval contains zero, 
+we can't reject our null hypothesis that differnt supplement methods have no effect on resulting tooth length in guinea pigs.
+
+### Different doses of Vitamin C impact to the teeth length
+We are going to start by spliting our data set into 3 sections to test impact of dose increase from 0.5 mg to 1 mg, from 0.5 mg to 2 mg and 1 mg to 2 mg.
+```{r}
+increase_05_to_1mg <- data[data$dose %in% c(0.5, 1.0), ]
+increase_05_to_2mg <- data[data$dose %in% c(0.5, 2.0), ]
+increase_1_to_2mg <- data[data$dose %in% c(1.0, 2.0), ]
+```
+
+Increase of Vitamin C dose from 0.5 mg to 1 mg.
+```{r}
+t.test(len ~ dose, data = increase_05_to_1mg)
+```
+
+Increase of Vitamin C dose from 0.5 mg to 2 mg.
+```{r}
+t.test(len ~ dose, data = increase_05_to_2mg)
+```
+
+Increase of Vitamin C dose from 1 mg to 2 mg.
+```{r}
+t.test(len ~ dose, data = increase_1_to_2mg)
+```
+
+As for all 3 tests confidence interval does not include 0 and p-value's are less than 0.05 (5%) we can infer that increase in Vitamin C does, does lead to increased teeth length in guinea pigs. Therefore we reject our null hypothesis (that there is no increase to teeth length due to increase of Vitamin C dose).
+
+## Summary
+We can conclude that:
+
+- Supplement choice has no effect on teeth growth.
+- Incrasing of the dose level will lead to increased teeth growth.
+
+As long as the following assumptions are correct:
+
+- That experiment was done with random assignment of quinea pigs to different dose levels and different suplement type.
+- That sample members are representative of all population of guinea pigs.
+- All the t-tests assumed the different variances for the 2 groups being compared.
