@@ -1,0 +1,102 @@
+---
+title: "Practical Machine Learning - Assesment"
+author: "Martynas Asipauskas"
+date: "21 June 2015"
+output: html_document
+---
+## Executive Summary
+This report is a peer assessed assignment for Practical Machine Learning class in Coursera. This exercise will utilize [Human Activity Recognition](http://groupware.les.inf.puc-rio.br/har) dataset and will use Random Forest machine learning algorithm to predict the activity based on sensor data.
+
+Overall, we are fitting a prediction model using random forest algorithm to predict users activity based on sensors data. The model has a prediction accuracy of 99.5% and estimated out of sample error of 0.5% $(1 - testing accuracy)$.
+
+## Setup
+```{r}
+library(caret)
+require(randomForest)
+set.seed(20150621)
+```
+## Getting data
+```{r, cached=TRUE}
+if (!dir.exists("./data")) {
+    dir.create("./data")
+    download.file('https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv', './data/pml-training.csv')
+    download.file('https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv','./data/pml-test.csv' )
+}
+
+```
+
+We'll create a `data` directory if it doesn't exist and download report files to it.
+
+## Cleaning data
+To prepare the data-set for fitting into ML algorithms, we will perform the following steps:
+- As files contain a lot of missing values, for data cleaning we will convert all blank, '#DIV/0!', and 'NA' values to NA's.
+- For prediction quality we'll only leave columns which have less than 60% of NA values.
+- We'll remove: problem id, user name and timestamp values as they aren't relevant to predictions
+
+```{r}
+na_strings <- c("", "NA", "#DIV/0!")
+
+training_set <- read.csv("./data/pml-training.csv", na.strings = na_strings)
+testing_set <- read.csv("./data/pml-test.csv", na.strings = na_strings)
+
+columns_to_remove <- c(1:5)
+training_set <- training_set[, -columns_to_remove]
+testing_set <- testing_set[, -columns_to_remove]
+testing_set <- testing_set[, -ncol(testing_set)] # remove problem id
+
+columns_to_remove_na <- which((colSums(is.na(training_set)) >= 0.4 * nrow(training_set)))
+training_set <- training_set[,-columns_to_remove_na]
+testing_set     <- testing_set[,-columns_to_remove_na]
+
+# convert all columns excluding class / problem id to numeric
+for (i in 1:(length(training_set) - 1)) {
+    training_set[, i] <- as.numeric(training_set[, i])
+    testing_set[, i] <- as.numeric(testing_set[, i])
+}
+
+```
+
+## Partition data into training and test sets
+For applying machine learning algorithms and testing the models we are going to split our training set to 60% for training, 40% of population for testing.
+```{r}
+in_training  <- createDataPartition(training_set$classe, p = 0.6, list = FALSE)
+training    <- training_set[in_training, ]
+testing     <- training_set[-in_training, ]
+```
+
+## Applying Random Forest algorithm
+The outcome variable will be `classe` with all remaining columns to be used in the data frame for prediction. We will perform 5 fold cross validation.
+
+```{r, cache=TRUE}
+class <- training$classe
+data <- training[, -ncol(training)]
+model <- train(
+    data, class, method = "rf",
+    tuneGrid = data.frame(.mtry = 3),
+    trControl = trainControl(method = "cv", number = 5)
+)
+
+model
+
+predictions <- predict(model, testing, type = "raw")
+confusionMatrix(predictions, testing$classe)
+```
+
+Overall random forest performs really well with accuracy of 99.5%
+
+## Submit results of test set
+```{r}
+write_answer_files = function(x){
+  number_of_problems <- length(x)
+  for (current_problem in 1:number_of_problems){
+    filename = paste0("problem_id_",current_problem,".txt")
+    write.table(x[current_problem],file = filename, quote = FALSE, row.names = FALSE, col.names = FALSE)
+  }
+}
+
+solutions <- predict(model, testing_set)
+write_answer_files(solutions)
+```
+## Summary
+
+During this project, we've fitted a prediction model using random forest algorithm to predict users activity based on sensors data. The model has a prediction accuracy of 99.5% and estimated out of sample error of 0.5% $(1 - testing accuracy)$. Although we do estimate the low out of sample error rate, we can expect prediction to be inaccurate much more frequently in the real life. Due to us making a prediction on subject movements being recored when performing to a set of specific predetermined activities.
